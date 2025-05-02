@@ -61,12 +61,12 @@ void* trajet_bus(void* arg) {
     for (int voyage = 1; voyage <= NB_VOYAGES; voyage++) {
         if (voyage % 2 == 1) {  // voyage impair = aller (X->Y ou Y->X)
             entrer_tunnel(ville_origine);
-            printf("Bus %d de %c va de %c à %c (Aller, voyage %d)\n", numero, ville_origine, ville_origine, ville_opposee, voyage);
+            printf("Bus %d de %c :  %c -> %c (Aller, voyage %d)\n", numero, ville_origine, ville_origine, ville_opposee, voyage);
             usleep(1000000 + rand() % 500000);  // pause de 1 à 1.5s
             sortir_tunnel(ville_origine);
         } else {  // voyage pair = retour (Y->X ou X->Y)
             entrer_tunnel(ville_opposee);
-            printf("Bus %d de %c va de %c à %c (Retour, voyage %d)\n", numero, ville_origine, ville_opposee, ville_origine, voyage);
+            printf("Bus %d de %c :  %c -> %c (Retour, voyage %d)\n", numero, ville_origine, ville_opposee, ville_origine, voyage);
             usleep(1000000 + rand() % 500000);  // pause de 1 à 1.5s
             sortir_tunnel(ville_opposee);
         }
