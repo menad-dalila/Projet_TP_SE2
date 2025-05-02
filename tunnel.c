@@ -7,12 +7,12 @@
 
 #define NB_BUS_X 5
 #define NB_BUS_Y 4
-#define NB_VOYAGES 10
+#define NB_VOYAGES 20  // 10 allers + 10 retours = 20 voyages
 
-sem_t acces_tunnel;  // pour bloquer le tunnel quand un sens l'utilise
-sem_t file_x, file_y;  // pour éviter que X ou Y prenne tout le temps
-int bus_x_dans_tunnel = 0;  // combien de bus X sont dans le tunnel
-int bus_y_dans_tunnel = 0;  // pareil pour Y
+sem_t acces_tunnel;  // bloque le tunnel pour un sens à la fois
+sem_t file_x, file_y;  // pour que X et Y aient leur tour
+int bus_x_dans_tunnel = 0;  // compte les bus X dans le tunnel
+int bus_y_dans_tunnel = 0;  // compte les bus Y
 
 // fonction pour entrer dans le tunnel
 void entrer_tunnel(char ville) {
@@ -55,23 +55,21 @@ void sortir_tunnel(char ville) {
 // ce que fait chaque bus
 void* trajet_bus(void* arg) {
     int numero = *((int*)arg);
-    char ville_origine = (numero < NB_BUS_X) ? 'X' : 'Y';
+    char ville_origine = (numero <= NB_BUS_X) ? 'X' : 'Y';
     char ville_opposee = (ville_origine == 'X') ? 'Y' : 'X';
 
     for (int voyage = 1; voyage <= NB_VOYAGES; voyage++) {
-        // aller (X->Y ou Y->X)
-        entrer_tunnel(ville_origine);
-        printf("Bus %d de %c va de %c à %c (voyage %d)\n", numero, ville_origine, ville_origine, ville_opposee, voyage);
-        usleep(1000000 + rand() % 500000);  // pause entre 1 et 1.5s
-        sortir_tunnel(ville_origine);
-
-        // retour (Y->X ou X->Y)
-        entrer_tunnel(ville_opposee);
-        printf("Bus %d de %c va de %c à %c (voyage %d)\n", numero, ville_origine, ville_opposee, ville_origine, voyage);
-        usleep(
-
-1000000 + rand() % 500000);  // encore une pause
-        sortir_tunnel(ville_opposee);
+        if (voyage % 2 == 1) {  // voyage impair = aller (X->Y ou Y->X)
+            entrer_tunnel(ville_origine);
+            printf("Bus %d de %c va de %c à %c (Aller, voyage %d)\n", numero, ville_origine, ville_origine, ville_opposee, voyage);
+            usleep(1000000 + rand() % 500000);  // pause de 1 à 1.5s
+            sortir_tunnel(ville_origine);
+        } else {  // voyage pair = retour (Y->X ou X->Y)
+            entrer_tunnel(ville_opposee);
+            printf("Bus %d de %c va de %c à %c (Retour, voyage %d)\n", numero, ville_origine, ville_opposee, ville_origine, voyage);
+            usleep(1000000 + rand() % 500000);  // pause de 1 à 1.5s
+            sortir_tunnel(ville_opposee);
+        }
     }
     return NULL;
 }
@@ -87,15 +85,15 @@ int main() {
     pthread_t bus[NB_BUS_X + NB_BUS_Y];
     int numeros[NB_BUS_X + NB_BUS_Y];
 
-    // créer les bus de X
+    // créer les bus de X (numéros 1 à 5)
     for (int i = 0; i < NB_BUS_X; i++) {
-        numeros[i] = i;
+        numeros[i] = i + 1;  // numéros 1, 2, 3, 4, 5
         pthread_create(&bus[i], NULL, trajet_bus, &numeros[i]);
     }
 
-    // créer les bus de Y
+    // créer les bus de Y (numéros 6 à 9)
     for (int i = 0; i < NB_BUS_Y; i++) {
-        numeros[NB_BUS_X + i] = NB_BUS_X + i;
+        numeros[NB_BUS_X + i] = NB_BUS_X + i + 1;  // numéros 6, 7, 8, 9
         pthread_create(&bus[NB_BUS_X + i], NULL, trajet_bus, &numeros[NB_BUS_X + i]);
     }
 
